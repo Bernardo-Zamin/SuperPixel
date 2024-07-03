@@ -3,18 +3,18 @@ import matplotlib.pyplot as plt
 import cv2
 from skimage.segmentation import slic, mark_boundaries
 from skimage.util import img_as_float
-from skimage.io import imsave
+import sys
 
-# Carregar a imagem e convertê-la para float
-img_path = 'images/L4A0052.jpg'  # Substitua pelo caminho da sua imagem
+# carrega imagem
+img = sys.argv[1]
+img_path = 'images/' + img + '.jpg'
 image = cv2.imread(img_path)
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 image = img_as_float(image)
 
-# Segmentar a imagem em superpixels
+# segmenta usando slic
 segments = slic(image, n_segments=100, compactness=10, start_label=1)
 
-# Função para capturar cliques e destacar superpixels
 clicks = []
 selected_segments = []
 
@@ -40,18 +40,17 @@ def update_display():
 def save_mask():
     mask = np.zeros(segments.shape, dtype=np.uint8)
     for segment_id in selected_segments:
-        mask[segments == segment_id] = 1
-    mask = mask * 255  # Converter a máscara binária para formato visível
-    mask_path = 'mask.png'
-    imsave(mask_path, mask)
+        mask[segments == segment_id] = 255
+    mask_path = 'masks/' + img + '_mask.png'
+    plt.imsave(mask_path, mask, cmap='gray')
     print(f'Máscara salva em: {mask_path}')
 
-# Exibir a imagem e configurar o callback de clique
+
 fig, ax = plt.subplots()
 ax.imshow(mark_boundaries(image, segments))
 plt.axis('off')
 fig.canvas.mpl_connect('button_press_event', on_click)
-plt.title("Clique nas regiões segmentadas")
+plt.title("Clique nas regiões segmentadas (onde clicar vai ficar branco na máscara)")
 plt.show()
 
 # Exibir os cliques capturados
